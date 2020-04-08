@@ -10,6 +10,7 @@ library(skimr)
 library(broom)
 library(gganimate)
 library(tidyverse)
+library(gt)
 
 x <- read_rds("college.rds")
 ```
@@ -20,19 +21,82 @@ Today's class will be based on [Chapter 12: "Multiple Regression"](https://david
 
 **Prompt:** Recall the three common steps of exploring a new dataset: 1) looking at the raw data, 2) computing summary statistics, and 3) creating visualizations of the data. Start this process. Useful commands to use here: `glimpse()`,`sample_n`, and `skim` (from the skimr package). What observations are surprising? (Hints: Look at extremes, especially for the key variable you are interested in. Hint at the data for the schools you know.)  
 
+```{r}
+
+glimpse(x)
+
+x %>%
+  sample_n(size =5)
+
+skim(x)
+
+```
+
+
 ### Scene 2
 
 **Prompt:** What's the correlation between the average faculty salary in 2001 and the median income of students 10 years after entering? What's the correlation between the average SAT scores in 2001 and the median income of students 10 years after entering? Find these by doing two separate correlations first, and then making a correlation matrix (instructions in the book). 
 
 
+```{r}
+
+corr_faculty_earnings <- x %>%
+  summarize(correlation = cor(faculty,earnings))
+
+
+corr_sat_earnings <- x %>%
+  summarize(correlation = cor(earnings,sat))
+
+x %>%
+  select(faculty, earnings, sat) %>%
+  cor()
+
+
+```
+
 ### Scene 3
 
 **Prompt:** Visualize the relationships between the outcome variable (`earnings`) and the two key numerical explanatory variables (`faculty` and `sat`), one at a time. Create a ggplot for each showing the line of best fit.
 
+```{r}
+
+x %>%
+  ggplot(aes(x= faculty, y=earnings)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Relationship between average faculty income and median income of students",
+       x = "Average Faculty Income",
+       y = "Average Earnings")
+
+```
+
+
+```{r}
+
+x %>%
+  ggplot(aes(x= sat, y=earnings)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)+
+   labs(title = "Relationship between average SAT score and median income of students",
+       x = "Average SAT score",
+       y = "Average Earnings")
+
+```
 
 ### Scene 4
 
 **Prompt:** Now let's quantify these relationships between the two explanatory variables and the outcome variable. Fit a multiple regression model for `earnings` using `sat` and `faculty` as the explanatory variables. Write a bullet point interpreting each of the three values in the estimate column. Do not use any interaction terms in the regression (yet).
+
+```{r}
+
+x %>%
+  lm(earnings ~ sat + faculty, data = .) %>%
+  tidy()
+
+
+```
+earnings = b0 + b1(sat) + b2(faculty), where b0 is the (Intercept) coefficient, b1 is the sat coefficient, and b2 is the faculty coefficient. b0 tells us that when the average sat score and the average faculty income are 0, then the median student earnings 10 years after graduating is $-2590.98. The b1 value tells us that for every increase of 1 point in average SAT score, the average median student earning of the universities goes up by $24.48. 
+
 
 
 ### Scene 5
